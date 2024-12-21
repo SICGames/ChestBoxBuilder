@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (inputFile == nullptr) 
     {
-        std::cout << "No input file specified..." << std::endl;
+        std::cout << "No input file specified...\t0%" << std::endl;
         return  0;
     }
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         {
             char msg[2048] = { 0 };
 
-            sprintf_s(msg,sizeof(msg)/sizeof(char),"%s does not exist.", inputFile);
+            sprintf_s(msg,sizeof(msg)/sizeof(char),"%s does not exist.\t0%", inputFile);
 
             std::cout << msg << std::endl;
             containsStr.clear();
