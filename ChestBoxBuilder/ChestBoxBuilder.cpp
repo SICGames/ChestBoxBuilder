@@ -1,0 +1,208 @@
+// ChestBoxBuilder.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+
+#include <iostream>
+#include <istream>
+#include <fstream>
+#include <string>
+#include <algorithm>
+#include <vector>
+#include <Windows.h>
+#include <sys/stat.h>
+
+#include "resource.h"
+
+void DisplayUseage() {
+    std::cout << "Program Usage: ChestBoxBuilder.exe -i [input file] -o [out file] -L [language display name] en-US" << std::endl;
+}
+
+bool FileExists(const std::string &filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
+char* getCmdOption(char** begin, char** end, const std::string& option)
+{
+    char** itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return *itr;
+    }
+    return 0;
+}
+
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+    return std::find(begin, end, option) != end;
+}
+
+unsigned int GetLineCount(char* filename) {
+    unsigned int lines = 0;
+    FILE* inFile = nullptr;
+    fopen_s(&inFile, filename, "r");
+    char c;
+    if (inFile == nullptr) {
+        return 0;
+    }
+
+    while (EOF != (c = getc(inFile))) {
+        if ('\n' == c)
+            lines++;
+    }
+    fclose(inFile);
+    return lines;
+}
+
+bool Has(std::vector<std::string> array, std::string target, unsigned int index) {
+
+    bool found = false;
+    for (auto i = array.begin() + index; i != array.end(); ++i) {
+        auto t = *i;
+        if (t.find(target) != std::string::npos) {
+            found = true;
+            break;
+        }
+    }
+    return found;
+}
+
+void DisplayHelp() {
+    std::cout << "Use -help for understanding program usage." << std::endl;
+}
+int main(int argc, char *argv[])
+{
+    char* inputFile = nullptr;
+    char* outputFile = nullptr;
+    char* lang = nullptr;
+
+    if (argc < 1) {
+        DisplayHelp();
+        return 0;
+    }
+    if (cmdOptionExists(argv, argv + argc, "-help")) {
+        DisplayUseage();
+    }
+    inputFile = getCmdOption(argv, argv + argc, "-i");
+    outputFile = getCmdOption(argv, argv + argc, "-o");
+    lang = getCmdOption(argv, argv + argc, "-L");
+
+    /* localization 
+       - load specified .DLL 
+       - load string from loaded .DLL
+    */
+
+    //-- we'll just default to en-US
+    char sz[255] = { 0 };
+    LoadStringA(GetModuleHandle(0),IDS_CONTAINS, sz, sizeof(sz)/sizeof(char));
+    
+    std::vector<std::string> lineArray;
+    std::string containsStr(sz);
+
+    if (inputFile == nullptr) 
+    {
+        std::cout << "No input file specified..." << std::endl;
+        return  0;
+    }
+
+    if (inputFile) {
+        std::string file(inputFile);
+        bool exists = FileExists(file);
+        if (exists == false) 
+        {
+            char msg[2048] = { 0 };
+
+            sprintf_s(msg,sizeof(msg)/sizeof(char),"%s does not exist.", inputFile);
+
+            std::cout << msg << std::endl;
+            containsStr.clear();
+            inputFile = nullptr;
+            outputFile = nullptr;
+            return 0;
+        }
+
+        if (exists) 
+        {
+            int maxLines = GetLineCount(inputFile);
+            lineArray.resize(maxLines);
+
+            if (maxLines > 0)
+            {
+                unsigned int lines = 0;
+                std::string line;
+                std::ifstream iFile(inputFile);
+                double percentage;
+                while (std::getline(iFile, line))
+                {
+                    double l = lines * 1.0;
+                    double ml = maxLines * 1.0;
+                    percentage = ((double)(l / ml) * 100.0);
+                    std::cout << "Processing Cached Clan Chest Data (" << lines << "/" << maxLines << ")\t" << round(percentage) << "%" << std::endl;
+                    lineArray[lines] = line;
+                    lines++;
+                    Sleep(1);
+                }
+                iFile.close();
+
+                if (outputFile)
+                {
+                    std::ofstream oFile(outputFile, std::ios::out);
+                    unsigned int inc = 0;
+                    unsigned int index = 0;
+                    for (auto i = 0; i < lineArray.size(); ++i)
+                    {
+
+                        double _i = i * 1.0;
+                        double _lSz = lineArray.size() * 1.0;
+                        double percentage = ((double)_i / _lSz * 100.0);
+                        std::cout << "Populating Chest Boxes...\t" << round(percentage) << "%" << std::endl;
+                        oFile << "#\n";
+
+                        //-- 0 Gnorme Workshop Chest
+                        //-- 1 From: AwesomeDude
+                        //-- 2 Source: Level 5 Crypt
+                        //-- 3 Contains: Gold
+
+                        try
+                        {
+                            std::vector<std::string> tmp_array(lineArray);
+                            if (Has(tmp_array, containsStr, i)) {
+                                inc = 4;
+                            }
+                            else
+                            {
+                                inc = 3;
+                            }
+
+                            for (unsigned int x = 0; x != inc; x++) {
+                                oFile << lineArray[i + x] << "\n";
+                            }
+                            tmp_array.clear();
+                        }
+                        catch (std::exception ex) {
+                            int bad = 0;
+                        }
+
+                        i += inc - 1;
+                        Sleep(1);
+                    }
+
+                    oFile << "#\n";
+                    oFile.close();
+                }
+            }
+        }
+    }
+
+    //-- Clean Up On Isle 5
+    containsStr.clear();
+
+    if (lineArray.size() > 0) {
+        lineArray.clear();
+    }
+
+    ZeroMemory(&sz, sizeof(sz) / sizeof(char));
+
+    outputFile = nullptr;
+    inputFile = nullptr;
+
+    return 0;
+}
