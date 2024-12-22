@@ -6,7 +6,7 @@ A Chest Box represents the following:
 ```
 Gnorme Workshop Chest
 From: AwesomeClanmate
-Source: LEvel 25 Crypt
+Source: Level 25 Crypt
 ```
 
 At times, expired chests will include a "Contains:" section. Giving the Chest Box four lines instead of three. After the console is completed with creating a manaagable format. Each Chest box is represented as:
