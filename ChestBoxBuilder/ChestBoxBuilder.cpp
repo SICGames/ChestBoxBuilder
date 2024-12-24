@@ -73,6 +73,8 @@ int main(int argc, char *argv[])
     char* inputFile = nullptr;
     char* outputFile = nullptr;
     char* lang = nullptr;
+    bool bSuccess = false;
+    bool bBadBadBad = false;
 
     if (argc < 1) {
         DisplayHelp();
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
         {
             char msg[2048] = { 0 };
 
-            sprintf_s(msg,sizeof(msg)/sizeof(char),"404\t%s does not exist.\t0%", inputFile);
+            sprintf_s(msg,sizeof(msg)/sizeof(char),"404\t %s does not exist.\t0%", inputFile);
 
             std::cout << msg << std::endl;
             containsStr.clear();
@@ -121,7 +123,14 @@ int main(int argc, char *argv[])
 
         if (exists) 
         {
-            int maxLines = GetLineCount(inputFile);
+            int maxLines = -1;
+            try {
+                maxLines = GetLineCount(inputFile);
+            }
+            catch (std::exception ex) {
+
+            }
+
             lineArray.resize(maxLines);
 
             if (maxLines > 0)
@@ -178,7 +187,9 @@ int main(int argc, char *argv[])
                             tmp_array.clear();
                         }
                         catch (std::exception ex) {
-                            int bad = 0;
+                            bSuccess = false;
+                            bBadBadBad = true;
+                            break;
                         }
 
                         i += inc - 1;
@@ -187,6 +198,10 @@ int main(int argc, char *argv[])
 
                     oFile << "#\n";
                     oFile.close();
+                    if (bBadBadBad == false) 
+                    {
+                        bSuccess = true;
+                    }
                 }
             }
         }
@@ -203,8 +218,11 @@ int main(int argc, char *argv[])
 
     outputFile = nullptr;
     inputFile = nullptr;
-
-    std::cout << "200\tComplete\t100%" << std::endl;
-
+    if (bSuccess) {
+        std::cout << "200\tComplete\t100%" << std::endl;
+    }
+    else {
+        std::cout << "500\tUnexpected Error Occured.\t0%" << std::endl;
+    }
     return 0;
 }
