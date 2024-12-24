@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (inputFile == nullptr) 
     {
-        std::cout << "No input file specified...\t0%" << std::endl;
+        std::cout << "500\tNo input file specified...\t0%" << std::endl;
         return  0;
     }
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         {
             char msg[2048] = { 0 };
 
-            sprintf_s(msg,sizeof(msg)/sizeof(char),"%s does not exist.\t0%", inputFile);
+            sprintf_s(msg,sizeof(msg)/sizeof(char),"404\t%s does not exist.\t0%", inputFile);
 
             std::cout << msg << std::endl;
             containsStr.clear();
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
                     double l = lines * 1.0;
                     double ml = maxLines * 1.0;
                     percentage = ((double)(l / ml) * 100.0);
-                    std::cout << "Processing Cached Clan Chest Data (" << lines << "/" << maxLines << ")\t" << round(percentage) << "%" << std::endl;
+                    std::cout << "100\tProcessing Cached Clan Chest Data (" << lines << "/" << maxLines << ")\t" << round(percentage) << "%" << std::endl;
                     lineArray[lines] = line;
                     lines++;
                     Sleep(1);
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
                         double _i = i * 1.0;
                         double _lSz = lineArray.size() * 1.0;
                         double percentage = ((double)_i / _lSz * 100.0);
-                        std::cout << "Populating Chest Boxes...\t" << round(percentage) << "%" << std::endl;
+                        std::cout << "100\tPopulating Chest Boxes...\t" << round(percentage) << "%" << std::endl;
                         oFile << "#\n";
 
                         //-- 0 Gnorme Workshop Chest
@@ -203,6 +203,8 @@ int main(int argc, char *argv[])
 
     outputFile = nullptr;
     inputFile = nullptr;
+
+    std::cout << "200\tComplete\t100%" << std::endl;
 
     return 0;
 }
