@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
                 return -911;
             }
 
-            lineArray.resize(maxLines);
+            lineArray.resize(maxLines + 1);
 
             if (maxLines > 0)
             {
