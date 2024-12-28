@@ -9,6 +9,7 @@
 #include <vector>
 #include <Windows.h>
 #include <sys/stat.h>
+#include <stdexcept>
 
 #include "resource.h"
 
@@ -70,6 +71,18 @@ void DisplayHelp() {
 }
 int main(int argc, char *argv[])
 {
+
+    /*
+     Exit Codes Return Values:
+     0 = Success.
+     -1 = Help Displayed.
+     -500 = No Input File Declared
+     -501 = No Output File Declared
+     -404 = Input File Doesn't Exist
+     -405 = Output File Can't Be Written To
+     -411 = No Arguments Supplied.
+     -911 = Exception Occured.
+    */
     char* inputFile = nullptr;
     char* outputFile = nullptr;
     char* lang = nullptr;
@@ -78,10 +91,11 @@ int main(int argc, char *argv[])
 
     if (argc < 1) {
         DisplayHelp();
-        return 0;
+        return -411;
     }
     if (cmdOptionExists(argv, argv + argc, "-help")) {
         DisplayUseage();
+        return -1;
     }
     inputFile = getCmdOption(argv, argv + argc, "-i");
     outputFile = getCmdOption(argv, argv + argc, "-o");
@@ -102,7 +116,8 @@ int main(int argc, char *argv[])
     if (inputFile == nullptr) 
     {
         std::cout << "500\tNo input file specified...\t0%" << std::endl;
-        return EXIT_FAILURE;
+        Sleep(10);
+        return -500;
     }
 
     if (inputFile) {
@@ -118,7 +133,8 @@ int main(int argc, char *argv[])
             containsStr.clear();
             inputFile = nullptr;
             outputFile = nullptr;
-            return EXIT_FAILURE;
+            Sleep(10);
+            return -404;
         }
 
         if (exists) 
@@ -127,8 +143,12 @@ int main(int argc, char *argv[])
             try {
                 maxLines = GetLineCount(inputFile);
             }
-            catch (std::exception ex) {
-
+            catch (std::exception& ex) {
+                std::cout << "500\tSomething terrible just happened. ChestBoxBuilder crashed with a reason: " << ex.what() << ".\t0%" << std::endl;
+                inputFile = nullptr;
+                outputFile = nullptr;
+                lang = nullptr;
+                return -911;
             }
 
             lineArray.resize(maxLines);
@@ -145,11 +165,38 @@ int main(int argc, char *argv[])
                     double ml = maxLines * 1.0;
                     percentage = ((double)(l / ml) * 100.0);
                     std::cout << "100\tProcessing Cached Clan Chest Data (" << lines << "/" << maxLines << ")\t" << round(percentage) << "%" << std::endl;
-                    lineArray[lines] = line;
-                    lines++;
-                    Sleep(1);
+                    try {
+                        auto lineStr = lineArray.at(lines); //-- check to see if we can do this without exception.
+                        lineArray[lines] = line;
+                        lines++;
+                        Sleep(1);
+                    }
+                    catch (const std::out_of_range& e) {
+                        std::cout << "500\tSomething terrible just happened. ChestBoxBuilder crashed with a reason: Index Out Of Range. " << ".\t0%" << std::endl;
+                        bBadBadBad = true;
+                        bSuccess = false;
+                        Sleep(100);
+                        break;
+                    }
                 }
+
                 iFile.close();
+
+                if (bBadBadBad) {
+                    if (lineArray.size() > 0) 
+                    {
+                        maxLines = -1;
+                        lineArray.clear();
+                        inputFile = nullptr;
+                        outputFile = nullptr;
+                        return -911;
+                    }
+                }
+                if (!outputFile) {
+                    std::cout << "500\tNo output file specified...\t0%" << std::endl;
+                    Sleep(10);
+                    return -501;
+                }
 
                 if (outputFile)
                 {
@@ -160,7 +207,8 @@ int main(int argc, char *argv[])
                         containsStr.clear();
                         inputFile = nullptr;
                         outputFile = nullptr;
-                        return EXIT_FAILURE;
+                        Sleep(5);
+                        return -405;
                     }
 
                     unsigned int inc = 0;
@@ -232,7 +280,7 @@ int main(int argc, char *argv[])
     }
     else {
         std::cout << "500\tUnexpected Error Occured.\t0%" << std::endl;
-        return EXIT_FAILURE;
+        return -911;
     }
     return 0;
 }
