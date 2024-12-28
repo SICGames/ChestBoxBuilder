@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     if (inputFile == nullptr) 
     {
         std::cout << "500\tNo input file specified...\t0%" << std::endl;
-        return  0;
+        return EXIT_FAILURE;
     }
 
     if (inputFile) {
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
             containsStr.clear();
             inputFile = nullptr;
             outputFile = nullptr;
-            return 0;
+            return EXIT_FAILURE;
         }
 
         if (exists) 
@@ -154,6 +154,15 @@ int main(int argc, char *argv[])
                 if (outputFile)
                 {
                     std::ofstream oFile(outputFile, std::ios::out);
+                    if (!oFile) 
+                    {
+                        std::cout << "500\tUnable To Write to Output File '" << outputFile <<"'...\t0 % " << std::endl;
+                        containsStr.clear();
+                        inputFile = nullptr;
+                        outputFile = nullptr;
+                        return EXIT_FAILURE;
+                    }
+
                     unsigned int inc = 0;
                     unsigned int index = 0;
                     for (auto i = 0; i < lineArray.size(); ++i)
@@ -223,6 +232,7 @@ int main(int argc, char *argv[])
     }
     else {
         std::cout << "500\tUnexpected Error Occured.\t0%" << std::endl;
+        return EXIT_FAILURE;
     }
     return 0;
 }
