@@ -1,6 +1,6 @@
 // ChestBoxBuilder.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
+#include <sstream>
 #include <iostream>
 #include <istream>
 #include <fstream>
@@ -54,12 +54,20 @@ unsigned int GetLineCount(char* filename) {
 }
 
 bool Has(std::vector<std::string> array, std::string target, unsigned int index) {
-
+    int maxlines = 4;
+    int currentLine = 0;
     bool found = false;
-    for (auto i = array.begin() + index; i != array.end(); ++i) {
-        auto t = *i;
-        if (t.find(target) != std::string::npos) {
-            found = true;
+    for (auto i = array.begin() + index; i != array.end(); i++) 
+    {
+        if (currentLine < maxlines - 1) {
+            auto t = *i;
+            if (t.find(target) != std::string::npos) {
+                found = true;
+                break;
+            }
+            currentLine++;
+        }
+        else {
             break;
         }
     }
@@ -88,7 +96,7 @@ int main(int argc, char *argv[])
     char* lang = nullptr;
     bool bSuccess = false;
     bool bBadBadBad = false;
-
+    const char* errorMessage = nullptr;
     if (argc < 1) {
         DisplayHelp();
         return -411;
@@ -125,11 +133,9 @@ int main(int argc, char *argv[])
         bool exists = FileExists(file);
         if (exists == false) 
         {
-            char msg[2048] = { 0 };
-
-            sprintf_s(msg,sizeof(msg)/sizeof(char),"404\t %s does not exist.\t0%", inputFile);
-
-            std::cout << msg << std::endl;
+            std::stringstream ss;
+            ss << "404\t" << inputFile << " does not exist.\t0%";
+            std::cout << ss.str() << std::endl;
             containsStr.clear();
             inputFile = nullptr;
             outputFile = nullptr;
@@ -144,7 +150,7 @@ int main(int argc, char *argv[])
                 maxLines = GetLineCount(inputFile);
             }
             catch (std::exception& ex) {
-                std::cout << "500\tSomething terrible just happened. ChestBoxBuilder crashed with a reason: " << ex.what() << ".\t0%" << std::endl;
+                std::cout << "500\tSomething terrible just happened. ChestBoxBuilder caught an exception with a reason: " << ex.what() << ".\t0%" << std::endl;
                 inputFile = nullptr;
                 outputFile = nullptr;
                 lang = nullptr;
@@ -172,7 +178,7 @@ int main(int argc, char *argv[])
                         Sleep(1);
                     }
                     catch (const std::out_of_range& e) {
-                        std::cout << "500\tSomething terrible just happened. ChestBoxBuilder crashed with a reason: Index Out Of Range. " << ".\t0%" << std::endl;
+                        std::cout << "500\tSomething terrible just happened. ChestBoxBuilder caught an exception. Reason: Index Out Of Range. " << ".\t0%" << std::endl;
                         bBadBadBad = true;
                         bSuccess = false;
                         Sleep(100);
@@ -213,7 +219,8 @@ int main(int argc, char *argv[])
 
                     unsigned int inc = 0;
                     unsigned int index = 0;
-                    for (auto i = 0; i < lineArray.size(); ++i)
+                    
+                    for (auto i = 0; i < lineArray.size() - 1; i++)
                     {
 
                         double _i = i * 1.0;
@@ -230,6 +237,7 @@ int main(int argc, char *argv[])
                         try
                         {
                             std::vector<std::string> tmp_array(lineArray);
+
                             if (Has(tmp_array, containsStr, i)) {
                                 inc = 4;
                             }
@@ -243,9 +251,10 @@ int main(int argc, char *argv[])
                             }
                             tmp_array.clear();
                         }
-                        catch (std::exception ex) {
+                        catch (const std::exception &ex) {
                             bSuccess = false;
                             bBadBadBad = true;
+                            errorMessage = ex.what();
                             break;
                         }
 
@@ -279,7 +288,7 @@ int main(int argc, char *argv[])
         std::cout << "200\tComplete\t100%" << std::endl;
     }
     else {
-        std::cout << "500\tUnexpected Error Occured.\t0%" << std::endl;
+        std::cout << "500\tUnexpected Error Occured. Exception was caught for having the following reason: " << errorMessage << "\t0% " << std::endl;
         return -911;
     }
     return 0;
