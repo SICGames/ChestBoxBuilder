@@ -13,15 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\MiniLogger">
+      <UniqueIdentifier>{02de46d4-95ef-4bd7-9ba9-19c8b8642588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MiniLogger">
+      <UniqueIdentifier>{f293052a-c279-4c6a-ab76-9934621a29b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChestBoxBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MiniLogger\MiniLogger.cpp">
+      <Filter>Source Files\MiniLogger</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\MiniLogger\MiniLogger.h">
+      <Filter>Header Files\MiniLogger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

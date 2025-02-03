@@ -10,8 +10,11 @@
 #include <Windows.h>
 #include <sys/stat.h>
 #include <stdexcept>
-
 #include "resource.h"
+
+#include "Inc/MiniLogger/MiniLogger.h"
+
+MiniLogger* logger;
 
 void DisplayUseage() {
     std::cout << "Program Usage: ChestBoxBuilder.exe -i [input file] -o [out file] -L [language display name] en-US" << std::endl;
@@ -79,7 +82,9 @@ void DisplayHelp() {
 }
 int main(int argc, char *argv[])
 {
-
+    logger = new MiniLogger();
+    logger->CreateLogger("ChestBoxBuilder.log");
+    logger->Info("Chest Box Builder Started...");
     /*
      Exit Codes Return Values:
      0 = Success.
@@ -118,12 +123,18 @@ int main(int argc, char *argv[])
     char sz[255] = { 0 };
     LoadStringA(GetModuleHandle(0),IDS_CONTAINS, sz, sizeof(sz)/sizeof(char));
     
+    logger->Info("Loaded resource string 'Contains'");
+
     std::vector<std::string> lineArray;
     std::string containsStr(sz);
 
     if (inputFile == nullptr) 
     {
         std::cout << "500\tNo input file specified...\t0%" << std::endl;
+
+        logger->Warn("No input file such as a cached clan chest file has been specified.");
+        delete logger;
+
         Sleep(10);
         return -500;
     }
@@ -135,6 +146,10 @@ int main(int argc, char *argv[])
         {
             std::stringstream ss;
             ss << "404\t" << inputFile << " does not exist.\t0%";
+            
+            logger->Warn("Clan Chest File doesn't exist and could not be found.");
+            delete logger;
+
             std::cout << ss.str() << std::endl;
             containsStr.clear();
             inputFile = nullptr;
@@ -145,12 +160,20 @@ int main(int argc, char *argv[])
 
         if (exists) 
         {
+            logger->Info("Cache file exists and beginning to be processed.");
+            logger->Info("Beginning to read cache file and obtain maximum of lines in file.");
+
             int maxLines = -1;
             try {
                 maxLines = GetLineCount(inputFile);
             }
             catch (std::exception& ex) {
                 std::cout << "500\tSomething terrible just happened. ChestBoxBuilder caught an exception with a reason: " << ex.what() << ".\t0%" << std::endl;
+                logger->Fatal(&ex, "Issue with obtaining cached clan chest file\'s lines.");
+                
+                delete logger;
+                logger = 0;
+
                 inputFile = nullptr;
                 outputFile = nullptr;
                 lang = nullptr;
@@ -161,6 +184,8 @@ int main(int argc, char *argv[])
 
             if (maxLines > 0)
             {
+                logger->Info("Maximum lines of cached clan chest file obtained successfully.");
+
                 unsigned int lines = 0;
                 std::string line;
                 std::ifstream iFile(inputFile);
@@ -175,10 +200,18 @@ int main(int argc, char *argv[])
                         auto lineStr = lineArray.at(lines); //-- check to see if we can do this without exception.
                         lineArray[lines] = line;
                         lines++;
+                        logger->Info("Successfully processed a line from cached clan chest file.");
+
                         Sleep(1);
                     }
                     catch (const std::out_of_range& e) {
                         std::cout << "500\tSomething terrible just happened. ChestBoxBuilder caught an exception. Reason: Index Out Of Range. " << ".\t0%" << std::endl;
+                        std::exception ex(e);
+
+                        logger->Fatal(&ex, "There\'s an issue with processing clan chest file. Index out of range usually means there was an attempt to obtain an element outside array's max capacity.");
+
+                        delete logger;
+
                         bBadBadBad = true;
                         bSuccess = false;
                         Sleep(100);
@@ -187,6 +220,7 @@ int main(int argc, char *argv[])
                 }
 
                 iFile.close();
+                logger->Info("Closed cached clan chest file.");
 
                 if (bBadBadBad) {
                     if (lineArray.size() > 0) 
@@ -200,12 +234,17 @@ int main(int argc, char *argv[])
                 }
                 if (!outputFile) {
                     std::cout << "500\tNo output file specified...\t0%" << std::endl;
+                    logger->Info("No output file was specified. Which is unusual.");
+                    delete logger;
+
                     Sleep(10);
                     return -501;
                 }
 
                 if (outputFile)
                 {
+                    logger->Info("Writing to temporary output file.");
+
                     std::ofstream oFile(outputFile, std::ios::out);
                     if (!oFile) 
                     {
@@ -213,6 +252,8 @@ int main(int argc, char *argv[])
                         containsStr.clear();
                         inputFile = nullptr;
                         outputFile = nullptr;
+                        logger->Warn("Was not able to open temporary output file. Could be lack of permissions. Run as administrator and try again.");
+                        delete logger;
                         Sleep(5);
                         return -405;
                     }
@@ -220,6 +261,8 @@ int main(int argc, char *argv[])
                     unsigned int inc = 0;
                     unsigned int index = 0;
                     
+                    logger->Info("Beginning to populate and build chest boxes to output file.");
+
                     for (auto i = 0; i < lineArray.size() - 1; i++)
                     {
 
@@ -250,11 +293,15 @@ int main(int argc, char *argv[])
                                 oFile << lineArray[i + x] << "\n";
                             }
                             tmp_array.clear();
+                            logger->Info("Successfully built a chest box.");
+
                         }
                         catch (const std::exception &ex) {
                             bSuccess = false;
                             bBadBadBad = true;
                             errorMessage = ex.what();
+                            logger->Fatal((std::exception*)&ex, "Failed building a chest box. More information is provided.");
+                            delete logger;
                             break;
                         }
 
@@ -268,6 +315,8 @@ int main(int argc, char *argv[])
                     {
                         bSuccess = true;
                     }
+                    logger->Info("Everything went smooth as rain.");
+
                 }
             }
         }
@@ -284,6 +333,10 @@ int main(int argc, char *argv[])
 
     outputFile = nullptr;
     inputFile = nullptr;
+
+    logger->Info("Cleaning up amd shutting down...");
+    delete logger;
+
     if (bSuccess) {
         std::cout << "200\tComplete\t100%" << std::endl;
     }

@@ -128,8 +128,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ChestBoxBuilder.cpp" />
+    <ClCompile Include="src\MiniLogger\MiniLogger.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Inc\MiniLogger\MiniLogger.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
