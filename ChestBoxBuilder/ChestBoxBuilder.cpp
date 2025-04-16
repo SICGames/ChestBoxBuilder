@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         logger->Warn("No input file such as a cached clan chest file has been specified.");
         delete logger;
 
-        Sleep(10);
+        Sleep(100);
         return -500;
     }
 
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
             containsStr.clear();
             inputFile = nullptr;
             outputFile = nullptr;
-            Sleep(10);
+            Sleep(1);
             return -404;
         }
 
@@ -201,8 +201,7 @@ int main(int argc, char *argv[])
                         lineArray[lines] = line;
                         lines++;
                         logger->Info("Successfully processed a line from cached clan chest file.");
-
-                        Sleep(1);
+                        Sleep(10);
                     }
                     catch (const std::out_of_range& e) {
                         std::cout << "500\tSomething terrible just happened. ChestBoxBuilder caught an exception. Reason: Index Out Of Range. " << ".\t0%" << std::endl;
@@ -214,7 +213,7 @@ int main(int argc, char *argv[])
 
                         bBadBadBad = true;
                         bSuccess = false;
-                        Sleep(100);
+                        Sleep(10);
                         break;
                     }
                 }
@@ -254,7 +253,7 @@ int main(int argc, char *argv[])
                         outputFile = nullptr;
                         logger->Warn("Was not able to open temporary output file. Could be lack of permissions. Run as administrator and try again.");
                         delete logger;
-                        Sleep(5);
+                        Sleep(10);
                         return -405;
                     }
 
@@ -279,9 +278,11 @@ int main(int argc, char *argv[])
 
                         try
                         {
-                            std::vector<std::string> tmp_array(lineArray);
+                            std::vector<std::string> tmp_array;
+                            std::copy(lineArray.begin() + i, lineArray.end(), std::back_inserter(tmp_array));
+                            unsigned int endPos = lineArray.size() - i;
 
-                            if (Has(tmp_array, containsStr, i)) {
+                            if (Has(tmp_array, containsStr, endPos)) {
                                 inc = 4;
                             }
                             else
@@ -289,12 +290,15 @@ int main(int argc, char *argv[])
                                 inc = 3;
                             }
 
-                            for (unsigned int x = 0; x != inc; x++) {
-                                oFile << lineArray[i + x] << "\n";
+                            unsigned int linenum = i;
+                            for (unsigned int x = 0; x != inc; x++) 
+                            {
+                                std::string line = lineArray[i + x];
+                                oFile << line << "\n";
                             }
+
                             tmp_array.clear();
                             logger->Info("Successfully built a chest box.");
-
                         }
                         catch (const std::exception &ex) {
                             bSuccess = false;
@@ -306,7 +310,7 @@ int main(int argc, char *argv[])
                         }
 
                         i += inc - 1;
-                        Sleep(1);
+                        Sleep(5);
                     }
 
                     oFile << "#\n";
@@ -318,6 +322,11 @@ int main(int argc, char *argv[])
                     logger->Info("Everything went smooth as rain.");
 
                 }
+            }
+            else {
+                logger->Info("There are no lines to read from cache file. Possibly due to being empty.");
+                std::cout << "100\tNo lines obtainable. Possibly empty cached clan chest file...\t0%"<< std::endl;
+
             }
         }
     }
